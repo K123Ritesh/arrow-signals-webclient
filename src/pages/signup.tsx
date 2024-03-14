@@ -21,6 +21,7 @@ import {
 import { useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { FcGoogle } from 'react-icons/fc'
+import { Navigate } from "react-router-dom";
 
 const emailRegex: RegExp = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 export default function SignupPage() {
@@ -112,7 +113,7 @@ export default function SignupPage() {
     });
   }
 
-  function submmitSignupForm() {
+  async function submmitSignupForm() {
     resetFormErrorDefault();
     if (!validateForm()) {
       toast({
@@ -125,6 +126,25 @@ export default function SignupPage() {
       });
     } else {
       setLoading(true);
+    }
+
+    const res = await fetch("http://localhost:3000/auth/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        "name": signupForm.name,
+        "email": signupForm.email,
+        "password": signupForm.password,
+      }),
+    });
+
+    const data = await res.json();
+
+    if(data.accessToken) {
+      console.log(data.accessToken);
+      setLoading(false);
       toast({
         title: "Signup success!",
         description: "Please login to continue!",
@@ -133,6 +153,9 @@ export default function SignupPage() {
         isClosable: true,
         position: "top",
       });
+    }
+    if(data.message) {
+      console.log(data.message);
     }
   }
 
