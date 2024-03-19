@@ -1,42 +1,61 @@
-import { Button, Text, Box, Link, FormControl, FormLabel, FormHelperText, Input, Heading, ListItem, List } from "@chakra-ui/react";
-import { FcGoogle } from 'react-icons/fc';
+import { Button, Text, Box, useToast } from "@chakra-ui/react";
+import { useState, useEffect } from "react";
 export default function Home() {
+    const [queryParams, setQueryParams] = useState({});
+    const toast = useToast();
+  useEffect(() => {
+    // Function to parse query parameters from URL
+    const getQueryParams = () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const params = {};
+      for (const param of searchParams.entries()) {
+        params[param[0]] = param[1];
+      }
+      console.log("Params",params)
+      return params;
+    };
+
+    // Parse query parameters from URL when component mounts
+    setQueryParams(getQueryParams());
+  }, []);
+
+  function logOut(){
+    fetch('http://localhost:3000/auth/logout', {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+      })
+        .then(response => response.json())
+        .then((data) => {
+          console.log(data);
+        
+          if (data['message'] != null) {
+            //
+            toast({
+                title: "Logged Out Successfully",
+                description: "See you soon....",
+                status: "info",
+                duration: 5000,
+                isClosable: true,
+                position: "top",
+              });
+            
+            window.location.href = '/login'
+          } else {
+            //
+          }
+        });
+  }
     return (
         <Box textAlign="center" my={10} mx={50} py={50} px={50} width={'auto'}>
-            <Heading>Log in</Heading>
-            <Box my={5}>
-                <FormControl>
-                    <FormLabel>Email</FormLabel>
-                    <Input type="email" placeholder="angail@gmail.com" />
-                    <FormHelperText>We'll never share your email.</FormHelperText>
-                </FormControl>
-            </Box>
-            <Box my={5}>
-                <FormControl>
-                    <FormLabel>Password</FormLabel>
-                    <Input type="password" placeholder="Password" />
-                </FormControl>
-            </Box>
-            <Box my={5}>
-                <Text>
-                    <Link href="#">Forgot Password?</Link>
-                </Text>
-            </Box>
-            <List>
-                <ListItem>
-                    <Button variant="solid" size="lg" colorScheme="teal">
-                        Login
-                    </Button>
-
-                </ListItem>
-                <ListItem my={10} >
-                    <Button bgColor={'black'} leftIcon={<FcGoogle />} textColor={'white'}>
-
-                        Twitter
-                    </Button>
-                </ListItem>
-            </List>
+            <Text>{queryParams['name']}</Text>
+            <Button onClick={logOut}>
+Logout
+            </Button>
         </Box>
 
     );
 }
+
