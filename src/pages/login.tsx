@@ -20,7 +20,7 @@ import {
 } from "@chakra-ui/react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useState } from "react";
-import { FcGoogle } from 'react-icons/fc'
+import { FcGoogle } from "react-icons/fc";
 
 const emailRegex: RegExp = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 export default function LoginPage() {
@@ -66,7 +66,7 @@ export default function LoginPage() {
       password: "",
     });
   }
-  function submitLoginForm() {
+  async function submitLoginForm() {
     resetFormErrorDefault();
     if (!validateForm()) {
       toast({
@@ -78,6 +78,39 @@ export default function LoginPage() {
         position: "top",
       });
     }
+
+    const res = await fetch("http://localhost:3000/auth/signin", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username: loginForm.email,
+        password: loginForm.password,
+      }),
+    });
+
+    const data = await res.json();
+
+    if(data.accessToken) {
+      localStorage.setItem("accessToken", data.accessToken);
+      console.log(data.accessToken);
+    }
+    if(data.message) {
+      console.log(data.message);
+    }
+  }
+
+  async function handleGoogleLogin() {
+    const res = fetch("http://localhost:3000/auth/oauth2/signin/google", {
+      method: "GET",    
+      mode: 'no-cors', 
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log(res);
   }
 
   return (
@@ -175,6 +208,7 @@ export default function LoginPage() {
               maxW={"md"}
               variant={"outline"}
               leftIcon={<FcGoogle />}
+              onClick={handleGoogleLogin}
             >
               <Center>
                 <Text>Sign in with Google</Text>
@@ -184,7 +218,10 @@ export default function LoginPage() {
 
           <Stack textAlign={"center"}>
             <Text mt="2">
-              Dont have an account? <Link href="/signup" color={"blue.400"}>SignUp</Link>
+              Dont have an account?{" "}
+              <Link href="/signup" color={"blue.400"}>
+                SignUp
+              </Link>
             </Text>
           </Stack>
         </Box>
