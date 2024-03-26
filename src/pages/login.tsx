@@ -9,32 +9,36 @@ import {
   FormErrorMessage,
   IconButton,
   Stack,
-  Text,
+  Text, Center,
   useColorModeValue,
   InputGroup,
   InputRightElement,
   useToast,
   Spinner,
   Link,
-  Center,
+  // Link,
+
 } from "@chakra-ui/react";
+import { FcGoogle } from 'react-icons/fc';
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useState } from "react";
-import { FcGoogle } from "react-icons/fc";
+import { useNavigate } from "react-router-dom";
 
 const emailRegex: RegExp = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 export default function LoginPage() {
+
   const [loginForm, setLoginForm] = useState({
-    email: "",
+    username: "",
     password: "",
   });
   const [formError, setFormError] = useState({
-    email: "",
+    username: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const toast = useToast();
+  const navigate=useNavigate();
 
   function handleFormUpdate(name: string, value: string) {
     setLoginForm({
@@ -45,9 +49,9 @@ export default function LoginPage() {
 
   function validateForm(): boolean {
     let isValid = true;
-    if (loginForm.email === "" || emailRegex.test(loginForm.email) === false) {
+    if (loginForm.username === "" || emailRegex.test(loginForm.username) === false) {
       setFormError((prevFormErrors) => {
-        return { ...prevFormErrors, email: "Email is not valid!" };
+        return { ...prevFormErrors, username: "Email is not valid!" };
       });
       isValid = false;
     }
@@ -62,11 +66,11 @@ export default function LoginPage() {
 
   function resetFormErrorDefault() {
     setFormError({
-      email: "",
+      username: "",
       password: "",
     });
   }
-  async function submitLoginForm() {
+  function submitLoginForm() {
     resetFormErrorDefault();
     if (!validateForm()) {
       toast({
@@ -75,156 +79,156 @@ export default function LoginPage() {
         status: "error",
         duration: 5000,
         isClosable: true,
-        position: "top",
+        position: "top-right",
       });
+    } else {
+      setLoading(true);
+      console.log("Body is", JSON.stringify(loginForm))
+      fetch('http://localhost:3000/auth/signin', {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(loginForm)
+      })
+        .then(response => response.json())
+        .then((data) => {
+          console.log(data);
+          setLoading(false);
+          if (data['statusCode'] != null) {
+            toast({
+              title: "Un-Authorized",
+              description: "User Doesn't Exists!",
+              status: "error",
+              duration: 5000,
+              isClosable: true,
+              position: "top-right",
+            });
+          } else {
+            localStorage.setItem('accessToken',data['token']??'9090')
+            navigate('/')
+
+          }
+        });
+
     }
-
-    const res = await fetch("http://localhost:3000/auth/signin", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username: loginForm.email,
-        password: loginForm.password,
-      }),
-    });
-
-    const data = await res.json();
-
-    if(data.accessToken) {
-      localStorage.setItem("accessToken", data.accessToken);
-      console.log(data.accessToken);
-    }
-    if(data.message) {
-      console.log(data.message);
-    }
-  }
-
-  async function handleGoogleLogin() {
-    const res = fetch("http://localhost:3000/auth/oauth2/signin/google", {
-      method: "GET",    
-      mode: 'no-cors', 
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    console.log(res);
   }
 
   return (
     <Flex
-      minH={"100vh"}
-      minW={"100vw"}
-      align={"center"}
-      justify={"center"}
-      bg={useColorModeValue("gray.50", "gray.800")}
-    >
+      maxH={"100vh"}
+      maxW={"100vw"}
+      bg={useColorModeValue("gray.50", "gray.800")}>
       <Stack
-        spacing={8}
-        mx={"auto"}
-        w={{ sm: "xl", md: "md", lg: "md" }}
         py={12}
-        px={6}
-      >
-        <Stack align={"center"}>
-          <Heading fontSize={"4xl"}>Login</Heading>
-        </Stack>
-        <Box
-          rounded={"lg"}
-          bg={useColorModeValue("white", "gray.700")}
-          boxShadow={"lg"}
-          p={8}
-        >
-          <Stack spacing={4}>
-            <FormControl id="email" isInvalid={formError.email.length !== 0}>
-              <FormLabel>Email address</FormLabel>
-              <Input
-                type="email"
-                name="email"
-                onChange={(e) =>
-                  handleFormUpdate(e.target.name, e.target.value)
-                }
-              />
-              <FormErrorMessage>{formError.email}</FormErrorMessage>
-            </FormControl>
-            <FormControl
-              id="password"
-              isInvalid={formError.password.length !== 0}
-            >
-              <FormLabel>Password</FormLabel>
-              <InputGroup>
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  onChange={(e) =>
-                    handleFormUpdate(e.target.name, e.target.value)
-                  }
-                />
-                <InputRightElement>
-                  <IconButton
-                    variant="ghost"
-                    aria-label="show/hide password"
-                    icon={showPassword ? <FiEye /> : <FiEyeOff />}
-                    onClick={() =>
-                      setShowPassword(
-                        (prevShowPassword: boolean) => !prevShowPassword
-                      )
-                    }
-                  />
-                </InputRightElement>
-              </InputGroup>
-              <FormErrorMessage>{formError.password}</FormErrorMessage>
-            </FormControl>
-            <Stack spacing={10}>
-              <Stack
-                direction={{ base: "column", sm: "row" }}
-                align={"start"}
-                justify={"space-between"}
-              >
-                <Text color={"blue.400"}>Forgot password?</Text>
-              </Stack>
-              <Button
-                bg={"blue.400"}
-                color={"white"}
-                _hover={{
-                  bg: "blue.500",
-                }}
-                onClick={submitLoginForm}
-              >
-                {loading ? <Spinner /> : "Login"}
-              </Button>
+        minW={'55vw'}
+        minH={'100vh'}
+        px={6} backgroundColor={'green'}>
+      </Stack>
+      <Stack
+        w={'45vw'}
+        maxH={'100vh'}
+        py={12}
+        px={6} backgroundColor={'black'}>
+        <Flex
+          align={"center"}
+          minW={'40vw'}>
+          <Stack
+            mx={"auto"}
+            w={{ sm: "xl", md: "md", lg: "md" }}
+            py={12}
+            px={6}>
+            <Stack align={"flex-end"} >
+              <Text color={'white'} >
+                For Sign up<Button
+                  bg={"#9359c6"}
+                  color={"white"}
+                  _hover={{
+                    bg: "white",
+                    color: 'black'
+                  }} marginLeft={5}
+                  padding={2} textDecoration={"ButtonText"}>
+                  <Link href="/signup">Register Here</Link>
+                </Button>
+              </Text>
             </Stack>
+            <Stack align={"left"} marginLeft={8}>
+              <Heading fontSize={"3xl"} color={'white'}>Log in</Heading>
+            </Stack>
+            <Box
+              rounded={"lg"}
+              bg={'black'}
+              boxShadow={"lg"}
+              p={8}>
+              <Stack spacing={4}>
+                <FormControl id="email" isInvalid={formError.username.length !== 0}>
+                  <FormLabel color={'white'}>Email address</FormLabel>
+                  <Input
+                    type="email"
+                    name="username"
+                    color={'white'}
+                    onChange={(e) =>
+                      handleFormUpdate(e.target.name, e.target.value)
+                    }/>
+                  <FormErrorMessage>{formError.username}</FormErrorMessage>
+                </FormControl>
+                <FormControl
+                  id="password"
+                  isInvalid={formError.password.length !== 0}>
+                  <FormLabel color={'white'}>Password</FormLabel>
+                  <InputGroup>
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      color={'white'}
+                      onChange={(e) =>
+                        handleFormUpdate(e.target.name, e.target.value)
+                      }/>
+                    <InputRightElement>
+                      <IconButton
+                        variant="ghost"
+                        aria-label="show/hide password"
+                        icon={showPassword ? <FiEye /> : <FiEyeOff />}
+                        onClick={() =>
+                          setShowPassword(
+                            (prevShowPassword: boolean) => !prevShowPassword
+                          )
+                        }/>
+                    </InputRightElement>
+                  </InputGroup>
+                  <FormErrorMessage>{formError.password}</FormErrorMessage>
+                </FormControl>
+                <Stack spacing={10}>
+                  <Stack
+                    align={"flex-end"}
+                    justify={"space-between"}>
+                    <Link href="/signup" color={'white'}>Forgot password ?</Link>
+                  </Stack>
+                  <Button
+                    bg={"#9359c6"}
+                    color={"white"}
+                    _hover={{
+                      bg: "white",
+                      color: 'black'
+                    }}
+                    onClick={submitLoginForm}>
+                    {loading ? <Spinner /> : "Login"}
+                  </Button>
+                </Stack>
+              </Stack>
+              <Stack textAlign={"center"} mt="2" alignItems={"center"}>
+                <Text fontSize={"sm"} color={'white'}>
+                  Continue with
+                </Text>
+                <Button w={'full'} variant={'outline'} backgroundColor={'white'} borderColor={'#9359c6'} borderWidth={2} leftIcon={<FcGoogle />} isLoading={loading}>
+                  <Center>
+                    <Text>  {loading ? <Spinner /> : " Google"}</Text>
+                  </Center>
+                </Button>
+              </Stack>
+            </Box>
           </Stack>
-
-          <Stack textAlign={"center"} mt="2" alignItems={"center"}>
-            <Text fontSize={"sm"} color={useColorModeValue("black", "white")}>
-              or
-            </Text>
-
-            <Button
-              w={"full"}
-              maxW={"md"}
-              variant={"outline"}
-              leftIcon={<FcGoogle />}
-              onClick={handleGoogleLogin}
-            >
-              <Center>
-                <Text>Sign in with Google</Text>
-              </Center>
-            </Button>
-          </Stack>
-
-          <Stack textAlign={"center"}>
-            <Text mt="2">
-              Dont have an account?{" "}
-              <Link href="/signup" color={"blue.400"}>
-                SignUp
-              </Link>
-            </Text>
-          </Stack>
-        </Box>
+        </Flex>
       </Stack>
     </Flex>
   );
