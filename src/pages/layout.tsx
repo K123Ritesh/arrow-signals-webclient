@@ -19,7 +19,8 @@ import {
   PopoverTrigger,
   Text,
   useColorModeValue,
-  useDisclosure
+  useDisclosure,
+  useToast
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { IconType } from "react-icons";
@@ -31,7 +32,7 @@ import {
   FiSettings
 } from "react-icons/fi";
 import { IoMdHome } from "react-icons/io";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface LinkItemProps {
   name: string;
@@ -58,10 +59,27 @@ interface SidebarProps extends BoxProps {
 const LinkItems: Array<LinkItemProps> = [
   { name: "Home", icon: IoMdHome, path: "/" },
   { name: "Markets & Exchanges", icon: FaStore, path: "/trending" },
-  { name: "Profile", icon: FaUser, path: "/home" },
+  { name: "Profile", icon: FaUser, path: "/profile" },
 ];
 
+
+
 const SidebarContent = ({ onClose, pathName, ...rest }: SidebarProps) => {
+  const navigate=useNavigate();
+  const toast = useToast();
+  function logOut(){
+    localStorage.removeItem('accessToken')
+    console.log(localStorage.getItem('ab'));
+    toast({
+      title: "Logged Out Successfully",
+      description: "See you soon 👋👋👋",
+      status: "success",
+      duration: 5000,
+      isClosable: true,
+      position: "top-right",
+    });
+    navigate('/login')
+  }
   return (
     <Box
       transition="3s ease"
@@ -115,7 +133,7 @@ const SidebarContent = ({ onClose, pathName, ...rest }: SidebarProps) => {
             {"Settings"}
           </NavItem>
 
-          <NavItem key={"Logout"} icon={FiLogOut} path="/login">
+          <NavItem key={"Logout"} icon={FiLogOut} onClick={logOut}>
             {"Logout"}
           </NavItem>
         </Box>
