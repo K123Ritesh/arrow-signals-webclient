@@ -2,6 +2,7 @@ import { Box, Flex, Select, Text } from "@chakra-ui/react";
 import CommodityCard from "../components/commodityCard";
 import SuccessRateCard from "../components/successCard";
 import Layout from "./layout";
+import { useEffect } from "react";
 
 const Home = () => {
   const successdata = [
@@ -10,6 +11,30 @@ const Home = () => {
     { successRate: "45 %", timeFrame: "This Month" },
     { successRate: "45 %", timeFrame: "This Month" },
   ];
+
+  let userFavourites: any[] = [];
+
+  async function getHomeData() {
+    const response = await fetch(
+      "http://localhost:3000/home/get-home-details/1",
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      }
+    );
+    const res = await response.json();
+
+    userFavourites = res.data.favouriteSignals.data;
+
+    console.log(userFavourites);
+  }
+
+  useEffect(() => {
+    getHomeData();
+  }, []);
 
   const favouritesData = {
     name: "Gold",
@@ -67,9 +92,9 @@ const Home = () => {
           justifyContent="center"
           mt={4}
         >
-          <CommodityCard data={favouritesData} />
-          <CommodityCard data={favouritesData} />
-          <CommodityCard data={favouritesData} />
+          {userFavourites.map((data) => (
+            <CommodityCard data={data} isFavourite={true} />
+          ))}
         </Flex>
       </Box>
 
@@ -103,9 +128,9 @@ const Home = () => {
           justifyContent="center"
           mt={4}
         >
-          <CommodityCard data={favouritesData} />
-          <CommodityCard data={favouritesData} />
-          <CommodityCard data={favouritesData} />
+          {userFavourites.map((data) => (
+            <CommodityCard data={data} isFavourite={false} />
+          ))}
         </Flex>
       </Box>
 
@@ -139,9 +164,9 @@ const Home = () => {
           justifyContent="center"
           mt={4}
         >
-          <CommodityCard data={favouritesData} />
-          <CommodityCard data={favouritesData} />
-          <CommodityCard data={favouritesData} />
+          {userFavourites.map((data) => (
+            <CommodityCard data={data} isFavourite={false}/>
+          ))}
         </Flex>
       </Box>
     </Layout>

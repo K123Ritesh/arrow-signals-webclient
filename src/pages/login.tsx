@@ -92,19 +92,19 @@ export default function LoginPage() {
 
     const data = await res.json();
 
-    if(data.accessToken) {
+    if (data.accessToken) {
       localStorage.setItem("accessToken", data.accessToken);
       console.log(data.accessToken);
     }
-    if(data.message) {
+    if (data.message) {
       console.log(data.message);
     }
   }
 
   async function handleGoogleLogin() {
     const res = fetch("http://localhost:3000/auth/oauth2/signin/google", {
-      method: "GET",    
-      mode: 'no-cors', 
+      method: "GET",
+      mode: "no-cors",
       headers: {
         "Content-Type": "application/json",
       },
