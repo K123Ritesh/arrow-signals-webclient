@@ -5,7 +5,7 @@ import {
   Flex,
   Stack,
   Center,
-  Spinner // Import Spinner component from Chakra UI
+  Spinner 
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { FaBell, FaEdit } from "react-icons/fa"; 
@@ -38,7 +38,7 @@ const UserProfile = () => {
     });
   }
   
-  useEffect(getUserData, []); // Pass an empty array as the second argument to useEffect to run it only once on component mount
+  useEffect(getUserData, []); 
 
   return (
     <Flex
