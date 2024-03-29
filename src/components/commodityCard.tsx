@@ -1,28 +1,60 @@
 import { StarIcon } from "@chakra-ui/icons";
-import { Box, Button, Flex, Icon, SimpleGrid, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Flex,
+  Icon,
+  SimpleGrid,
+  Text,
+} from "@chakra-ui/react";
 import React from "react";
+import { format, isToday, isYesterday, isSameWeek } from 'date-fns';
+
+interface UserFavourite {
+  id: number;
+  name: string;
+  market: string;
+  latestSignal: {
+    id: number;
+    type: string;
+    status: string;
+    stopLoss: number;
+    ltp: number;
+    target1: number;
+    target2: number;
+    target3: number;
+    buyRange: number;
+    createdAt: string;
+  };
+}
 
 interface CommodityCardProps {
-  data: {
-    id: number,
-    latestSignal : {
-      id: number,
-      ltp: number,
-      origin: number,
-      status: string,
-      stoploss: number,
-      target1: number,
-      target2: number,
-      target3: number,
-      type: string,
-    },
-    market: string,
-    name: string
-  },
-  isFavourite: boolean
+  data: UserFavourite;
+  isFavourite: boolean;
 }
 
 const CommodityCard: React.FC<CommodityCardProps> = ({ data, isFavourite }) => {
+
+  const formatCreatedAt = (createdAt: string) => {
+    const date = new Date(createdAt);
+    const options: Intl.DateTimeFormatOptions = {
+      timeZone: 'Asia/Kolkata',
+      hour12: true,
+      hour: 'numeric',
+      minute: 'numeric',
+    };
+  
+    if (isToday(date)) {
+      return `Today ${date.toLocaleTimeString('en-IN', options)}`;
+    } else if (isYesterday(date)) {
+      return `Yesterday ${date.toLocaleTimeString('en-IN', options)}`;
+    } else if (isSameWeek(date, new Date())) {
+      return `${format(date, "EEEE")}, ${date.toLocaleTimeString('en-IN', options)}`;
+    } else {
+      return format(date, "do MMMM");
+    }
+  };
+
   return (
     <Box px={5} py={5} rounded={"xl"} maxW={{ base: "full", md: 900 }} bg={"#1b2028"}>
       <Flex justifyContent="space-between" alignItems="center" mb={3}>
@@ -36,74 +68,49 @@ const CommodityCard: React.FC<CommodityCardProps> = ({ data, isFavourite }) => {
             </Text>
           </Box>
         </Flex>
-
-        <Icon
-          as={StarIcon}
-          boxSize={6}
-          color={isFavourite ? "yellow.300" : "gray.400"}
-        />
+        <Icon as={StarIcon} boxSize={6} color={isFavourite ? "yellow.300" : "gray.400"} />
       </Flex>
-
-      <SimpleGrid
-        columns={{ base: 2, md: 3, lg:4 }}
-        rowGap={4}
-        textAlign={"center"}
-        mb={4}
-      >
-        <Flex
-          gap={2}
-          direction={"column"}
-          alignContent={"center"}
-          justifyContent={"center"}
-        >
+      <SimpleGrid columns={{ base: 2, md: 3, lg: 4 }} rowGap={4} textAlign={"center"} mb={4}>
+        <Flex gap={2} direction={"column"} alignContent={"center"} justifyContent={"center"}>
           <Text color={"#84868a"}>Call Type</Text>
           <Text color={"#ffffff"}>{data.latestSignal.type}</Text>
         </Flex>
-
         <Flex gap={2} direction={"column"}>
           <Text color={"#84868a"}>Call Status</Text>
           <Text color={"#ffffff"}>{data.latestSignal.status}</Text>
         </Flex>
-
         <Flex gap={2} direction={"column"}>
           <Text color={"#84868a"}>Stoploss</Text>
-          <Text color={"#ffffff"}>{data.latestSignal.stoploss}</Text>
+          <Text color={"#ffffff"}>{data.latestSignal.stopLoss}</Text>
         </Flex>
-
         <Flex gap={2} direction={"column"}>
           <Text color={"#84868a"}>LTP</Text>
           <Text color={"#ffffff"}>{data.latestSignal.ltp}</Text>
         </Flex>
-
         <Flex gap={2} direction={"column"}>
           <Text color={"#84868a"}>Buy Range</Text>
-          <Text color={"#ffffff"}>-</Text>
+          <Text color={"#ffffff"}>{data.latestSignal.buyRange}</Text>
         </Flex>
-
         <Flex gap={2} direction={"column"}>
           <Text color={"#84868a"}>Target 1</Text>
           <Text color={"#ffffff"}>{data.latestSignal.target1}</Text>
         </Flex>
-
         <Flex gap={2} direction={"column"}>
           <Text color={"#84868a"}>Target 2</Text>
           <Text color={"#ffffff"}>{data.latestSignal.target2}</Text>
         </Flex>
-
         <Flex gap={2} direction={"column"}>
           <Text color={"#84868a"}>Target 3</Text>
           <Text color={"#ffffff"}>{data.latestSignal.target3}</Text>
         </Flex>
       </SimpleGrid>
-
       <Flex
         justifyContent="space-between"
         alignItems="center"
         flexDirection={{ base: "column", md: "row" }}
         gap={4}
       >
-        <Text color={"#84868a"}>Last Modified on</Text>
-
+        <Text color={"#84868a"}>Last Modified on {formatCreatedAt(data.latestSignal.createdAt)}</Text>
         <Button bg={"#9359c6"} rounded={"full"}>
           <Text fontSize={"sm"} color={"#ffffff"}>
             View Details

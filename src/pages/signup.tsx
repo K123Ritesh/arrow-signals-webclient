@@ -1,49 +1,49 @@
 import {
-  Box,
-  Button,
-  Center,
   Flex,
-  FormControl,
-  FormErrorMessage,
-  FormLabel,
-  Heading,
-  IconButton,
+  Box,
   Input,
-  InputGroup,
-  InputRightElement,
-  Link,
-  Spinner,
+  Heading,
+  Button,
+  FormControl,
+  FormLabel,
+  FormErrorMessage,
+  IconButton,
   Stack,
   Text,
   useColorModeValue,
+  InputGroup,
+  InputRightElement,
   useToast,
+  Spinner,
+  // Link,
 } from "@chakra-ui/react";
-import { useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import { FcGoogle } from 'react-icons/fc'
-import { Navigate } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 
 const emailRegex: RegExp = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
 export default function SignupPage() {
+  const [signupForm, setSignupForm] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    phoneNumber: "",
+  });
+  const [formError, setFormError] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    phoneNumber: "",
+  });
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const toast = useToast();
+  const navigate=useNavigate();
 
-  const [signupForm, setSignupForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
-  });
-
-  const [formError, setFormError] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
-  });
 
   function handleFormUpdate(name: string, value: string) {
     setSignupForm({
@@ -54,50 +54,39 @@ export default function SignupPage() {
 
   function validateForm(): boolean {
     let isValid = true;
-    if (signupForm.name === "") {
-      setFormError((prevFormErrors) => {
-        return { ...prevFormErrors, name: "Name cannot be empty!" };
-      });
+    if (signupForm.fullName === "") {
+      setFormError((prevFormErrors) => ({
+        ...prevFormErrors,
+        fullName: "Full name cannot be empty!",
+      }));
       isValid = false;
     }
-    if (
-      signupForm.email === "" ||
-      emailRegex.test(signupForm.email) === false
-    ) {
-      setFormError((prevFormErrors) => {
-        return { ...prevFormErrors, email: "Invalid Email!" };
-      });
-      isValid = false;
-    }
-    if (signupForm.phone === "") {
-      setFormError((prevFormErrors) => {
-        return { ...prevFormErrors, phone: "Phone cannot be empty!" };
-      });
+    if (signupForm.email === "" || !emailRegex.test(signupForm.email)) {
+      setFormError((prevFormErrors) => ({
+        ...prevFormErrors,
+        email: "Email is not valid!",
+      }));
       isValid = false;
     }
     if (signupForm.password === "") {
-      setFormError((prevFormErrors) => {
-        return { ...prevFormErrors, password: "Password cannot be empty!" };
-      });
+      setFormError((prevFormErrors) => ({
+        ...prevFormErrors,
+        password: "Password cannot be empty!",
+      }));
       isValid = false;
     }
-    if (signupForm.confirmPassword === "") {
-      setFormError((prevFormErrors) => {
-        return {
-          ...prevFormErrors,
-          confirmPassword: "Confirm Password cannot be empty!",
-        };
-      });
+    if (signupForm.confirmPassword !== signupForm.password) {
+      setFormError((prevFormErrors) => ({
+        ...prevFormErrors,
+        confirmPassword: "Passwords do not match!",
+      }));
       isValid = false;
     }
-    if (signupForm.password !== signupForm.confirmPassword) {
-      setFormError((prevFormErrors) => {
-        return {
-          ...prevFormErrors,
-          password: "Password must match!",
-          confirmPassword: "Password must match!",
-        };
-      });
+    if (signupForm.phoneNumber === "") {
+      setFormError((prevFormErrors) => ({
+        ...prevFormErrors,
+        phoneNumber: "Phone number cannot be empty!",
+      }));
       isValid = false;
     }
     return isValid;
@@ -105,15 +94,15 @@ export default function SignupPage() {
 
   function resetFormErrorDefault() {
     setFormError({
-      name: "",
+      fullName: "",
       email: "",
-      phone: "",
       password: "",
       confirmPassword: "",
+      phoneNumber: "",
     });
   }
 
-  async function submmitSignupForm() {
+  function submitSignupForm() {
     resetFormErrorDefault();
     if (!validateForm()) {
       toast({
@@ -122,205 +111,182 @@ export default function SignupPage() {
         status: "error",
         duration: 5000,
         isClosable: true,
-        position: "top",
+        position: "top-right",
       });
     } else {
       setLoading(true);
-    }
-
-    const res = await fetch("http://localhost:3000/auth/signup", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        "name": signupForm.name,
-        "email": signupForm.email,
-        "password": signupForm.password,
-      }),
-    });
-
-    const data = await res.json();
-
-    if(data.accessToken) {
-      console.log(data.accessToken);
-      setLoading(false);
-      toast({
-        title: "Signup success!",
-        description: "Please login to continue!",
-        status: "success",
-        duration: 5000,
-        isClosable: true,
-        position: "top",
-      });
-    }
-    if(data.message) {
-      console.log(data.message);
+      console.log("Body is", JSON.stringify(signupForm))
+      fetch('http://localhost:3000/auth/signup', {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(signupForm)
+      })
+        .then(response => response.json())
+        .then((data) => {
+          console.log(data);
+          setLoading(false);
+          if (data['statusCode'] != null) {
+            toast({
+              title: "Signup Failed",
+              description: data.message || "Failed to signup!",
+              status: "error",
+              duration: 5000,
+              isClosable: true,
+              position: "top-right",
+            });
+          } else {
+            navigate('/')
+          }
+        })
+        .catch(error => {
+          console.error("Signup failed:", error);
+          setLoading(false);
+          toast({
+            title: "Signup Failed",
+            description: "Failed to signup! Please try again later.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+            position: "top-right",
+          });
+        });
     }
   }
 
   return (
     <Flex
-      minH={"100vh"}
-      minW={"100vw"}
-      align={"center"}
-      justify={"center"}
-      bg={useColorModeValue("gray.50", "gray.800")}
-    >
+      maxH={"100vh"}
+      maxW={"100vw"}
+      bg={useColorModeValue("gray.50", "gray.800")}>
       <Stack
-        spacing={8}
-        mx={"auto"}
-        w={{ sm: "xl", md: "md", lg: "md" }}
-        py={12}
-        px={6}
-      >
-        <Stack align={"center"}>
-          <Heading fontSize={"4xl"}>SignUp</Heading>
-        </Stack>
-        <Box
-          rounded={"lg"}
-          bg={useColorModeValue("white", "gray.700")}
-          boxShadow={"lg"}
-          p={8}
-        >
-          <Stack spacing={4}>
-            {/* Name */}
-            <FormControl id="name" isInvalid={formError.name.length !== 0}>
-              <FormLabel>Name</FormLabel>
-              <Input
-                type="text"
-                name="name"
-                onChange={(e) =>
-                  handleFormUpdate(e.target.name, e.target.value)
-                }
-              />
-              <FormErrorMessage>{formError.name}</FormErrorMessage>
-            </FormControl>
-
-            {/* Email Address */}
-            <FormControl id="email" isInvalid={formError.email.length !== 0}>
-              <FormLabel>Email address</FormLabel>
-              <Input
-                type="email"
-                name="email"
-                onChange={(e) =>
-                  handleFormUpdate(e.target.name, e.target.value)
-                }
-              />
-              <FormErrorMessage>{formError.email}</FormErrorMessage>
-            </FormControl>
-
-            {/* Phone Number */}
-            <FormControl id="phone" isInvalid={formError.phone.length !== 0}>
-              <FormLabel>Phone</FormLabel>
-              <Input
-                type="tel"
-                name="phone"
-                onChange={(e) =>
-                  handleFormUpdate(e.target.name, e.target.value)
-                }
-              />
-              <FormErrorMessage>{formError.phone}</FormErrorMessage>
-            </FormControl>
-
-            {/* Password */}
-            <FormControl
-              id="password"
-              isInvalid={formError.password.length !== 0}
-            >
-              <FormLabel>Password</FormLabel>
-              <InputGroup>
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  onChange={(e) =>
-                    handleFormUpdate(e.target.name, e.target.value)
-                  }
-                />
-                <InputRightElement>
-                  <IconButton
-                    variant="ghost"
-                    aria-label="show/hide password"
-                    icon={showPassword ? <FiEye /> : <FiEyeOff />}
-                    onClick={() =>
-                      setShowPassword(
-                        (prevShowPassword: boolean) => !prevShowPassword
-                      )
-                    }
-                  />
-                </InputRightElement>
-              </InputGroup>
-              <FormErrorMessage>{formError.password}</FormErrorMessage>
-            </FormControl>
-
-            {/* Confirm Password */}
-            <FormControl
-              id="confirm-password"
-              isInvalid={formError.confirmPassword.length !== 0}
-            >
-              <FormLabel>Confirm Password</FormLabel>
-              <InputGroup>
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  onChange={(e) =>
-                    handleFormUpdate(e.target.name, e.target.value)
-                  }
-                />
-                <InputRightElement>
-                  <IconButton
-                    variant="ghost"
-                    aria-label="show/hide password"
-                    icon={showPassword ? <FiEye /> : <FiEyeOff />}
-                    onClick={() =>
-                      setShowPassword(
-                        (prevShowPassword: boolean) => !prevShowPassword
-                      )
-                    }
-                  />
-                </InputRightElement>
-              </InputGroup>
-              <FormErrorMessage>{formError.confirmPassword}</FormErrorMessage>
-            </FormControl>
+        minW={'55vw'}
+        minH={'100vh'}
+        px={6} bgColor={'red'}>
+      </Stack>
+      <Stack
+        w={'45vw'}
+        px={6} backgroundColor={'black'}
+        maxH={'100vh'}>
+        <Flex
+          align={"center"}
+          minW={'40vw'}>
+          <Stack
+            mx={"auto"}
+            w={{ sm: "xl", md: "md", lg: "md" }}
+            py={12}
+            px={6}>
+            <Stack align={"flex-end"} >
+              <Text color={'white'} >
+                Already have an account?{" "}
+                <Button
+                  bg={"#9359c6"}
+                  color={"white"}
+                  _hover={{
+                    bg: "white",
+                    color: 'black'
+                  }} marginLeft={5}
+                  padding={2} textDecoration={"ButtonText"}>Login</Button>
+              </Text>
+            </Stack>
+            <Stack align={"left"} marginLeft={8}>
+              <Heading fontSize={"3xl"} color={'white'}>Sign Up</Heading>
+            </Stack>
+            <Box
+              rounded={"lg"}
+              bg={'black'}
+              boxShadow={"lg"}
+              p={8}>
+              <Stack spacing={4}>
+                <FormControl id="fullName" isInvalid={formError.fullName.length !== 0}>
+                  <FormLabel color={'white'}>Full Name</FormLabel>
+                  <Input
+                    type="text"
+                    name="fullName"
+                    color={'white'}
+                    onChange={(e) =>
+                      handleFormUpdate(e.target.name, e.target.value)
+                    } />
+                  <FormErrorMessage>{formError.fullName}</FormErrorMessage>
+                </FormControl>
+                <FormControl id="email" isInvalid={formError.email.length !== 0}>
+                  <FormLabel color={'white'}>Email address</FormLabel>
+                  <Input
+                    type="email"
+                    name="email"
+                    color={'white'}
+                    onChange={(e) =>
+                      handleFormUpdate(e.target.name, e.target.value)
+                    } />
+                  <FormErrorMessage>{formError.email}</FormErrorMessage>
+                </FormControl>
+                <FormControl
+                  id="password"
+                  isInvalid={formError.password.length !== 0}>
+                  <FormLabel color={'white'}>Password</FormLabel>
+                  <InputGroup>
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      color={'white'}
+                      onChange={(e) =>
+                        handleFormUpdate(e.target.name, e.target.value)
+                      } />
+                    <InputRightElement>
+                      <IconButton
+                        variant="ghost"
+                        aria-label="show/hide password"
+                        icon={showPassword ? <FiEye /> : <FiEyeOff />}
+                        onClick={() =>
+                          setShowPassword(
+                            (prevShowPassword: boolean) => !prevShowPassword
+                          )
+                        } />
+                    </InputRightElement>
+                  </InputGroup>
+                  <FormErrorMessage>{formError.password}</FormErrorMessage>
+                </FormControl>
+                <FormControl
+                  id="confirmPassword"
+                  isInvalid={formError.confirmPassword.length !== 0}>
+                  <FormLabel color={'white'}>Confirm Password</FormLabel>
+                  <Input
+                    type="password"
+                    name="confirmPassword"
+                    color={'white'}
+                    onChange={(e) =>
+                      handleFormUpdate(e.target.name, e.target.value)
+                    } />
+                  <FormErrorMessage>{formError.confirmPassword}</FormErrorMessage>
+                </FormControl>
+                <FormControl
+                  id="phoneNumber"
+                  isInvalid={formError.phoneNumber.length !== 0}>
+                  <FormLabel color={'white'}>Phone Number</FormLabel>
+                  <Input
+                    type="tel"
+                    name="phoneNumber"
+                    color={'white'}
+                    onChange={(e) =>
+                      handleFormUpdate(e.target.name, e.target.value)
+                    } />
+                  <FormErrorMessage>{formError.phoneNumber}</FormErrorMessage>
+                </FormControl>
+                <Button
+                  bg={"#9359c6"}
+                  color={"white"}
+                  _hover={{
+                    bg: "white",
+                    color: 'black'
+                  }}
+                  onClick={submitSignupForm}>
+                  {loading ? <Spinner /> : "Create Account"}
+                </Button>
+              </Stack>
+            </Box>
           </Stack>
-
-          <Stack textAlign={"center"}>
-            <Button
-              mt="4"
-              bg={"blue.400"}
-              color={"white"}
-              _hover={{ bg: "blue.500" }}
-              onClick={submmitSignupForm}
-              isLoading={loading}
-            >
-              {loading ? <Spinner /> : "SignUp"}
-            </Button>
-
-            <Text fontSize={"sm"} color={"white"}>
-              or
-            </Text>
-
-            <Button
-              w={"full"}
-              maxW={"md"}
-              variant={"outline"}
-              leftIcon={<FcGoogle />}
-            >
-              <Center>
-                <Text>Sign in with Google</Text>
-              </Center>
-            </Button>
-          </Stack>
-
-          <Stack textAlign={"center"}>
-            <Text mt="2">
-              Already have an account?{" "}
-              <Link href="/login" color={"blue.400"}>
-                LogIn
-              </Link>
-            </Text>
-          </Stack>
-        </Box>
+        </Flex>
       </Stack>
     </Flex>
   );

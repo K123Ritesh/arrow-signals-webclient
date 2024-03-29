@@ -2,54 +2,68 @@ import { Box, Flex, Select, Text } from "@chakra-ui/react";
 import CommodityCard from "../components/commodityCard";
 import SuccessRateCard from "../components/successCard";
 import Layout from "./layout";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+
+
+interface SuccessData {
+  successRate: string;
+  timeFrame: string;
+}
+
+interface UserFavourite {
+  id: number;
+  name: string;
+  market: string;
+  isFavourite: boolean;
+  latestSignal: {
+    id: number;
+    type: string;
+    status: string;
+    stopLoss: number;
+    ltp: number;
+    target1: number;
+    target2: number;
+    target3: number;
+    buyRange: number;
+    createdAt: string;
+  };
+}
 
 const Home = () => {
-  const successdata = [
+  const successdata: SuccessData[] = [
     { successRate: "45 %", timeFrame: "This Month" },
     { successRate: "45 %", timeFrame: "This Month" },
     { successRate: "45 %", timeFrame: "This Month" },
     { successRate: "45 %", timeFrame: "This Month" },
   ];
 
-  let userFavourites: any[] = [];
-
-  async function getHomeData() {
-    const response = await fetch(
-      "http://localhost:3000/home/get-home-details/1",
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      }
-    );
-    const res = await response.json();
-
-    userFavourites = res.data.favouriteSignals.data;
-
-    console.log(userFavourites);
-  }
+  const [userFavourites, setUserFavourites] = useState<UserFavourite[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    const getHomeData = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:3000/home/get-home-details/1",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          }
+        );
+        const res = await response.json();
+        setUserFavourites(res.data.favouriteSignals.data);
+      } catch (error) {
+        console.error("Error fetching home data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     getHomeData();
   }, []);
-
-  const favouritesData = {
-    name: "Gold",
-    market: "Commodity",
-    callType: "Buy",
-    callStatus: "Closed",
-    stoploss: 200,
-    ltp: 200,
-    buyRange: 20,
-    target1: 20,
-    target2: 20,
-    target3: 20,
-    isFavourite: true,
-    lastModified: "Mon, 10:35 pm",
-  };
 
   return (
     <Layout pathName="Home">
@@ -59,7 +73,7 @@ const Home = () => {
           fontWeight={"bold"}
           color={"white"}
         >
-          Hey Anirudh !
+          Hey Anirudh!
         </Text>
         <Flex justifyContent={"center"} mt={5}>
           <Flex
@@ -77,6 +91,7 @@ const Home = () => {
           </Flex>
         </Flex>
       </Box>
+
       <Box px={{ base: 4, md: 10 }} mt={8}>
         <Text
           color={"white"}
@@ -92,9 +107,17 @@ const Home = () => {
           justifyContent="center"
           mt={4}
         >
-          {userFavourites.map((data) => (
-            <CommodityCard data={data} isFavourite={true} />
-          ))}
+          {isLoading ? (
+            <Text color="white">Loading...</Text>
+          ) : (
+            userFavourites.map((data, index) => (
+              <CommodityCard
+                key={index}
+                data={data}
+                isFavourite={true}
+              />
+            ))
+          )}
         </Flex>
       </Box>
 
@@ -128,9 +151,17 @@ const Home = () => {
           justifyContent="center"
           mt={4}
         >
-          {userFavourites.map((data) => (
-            <CommodityCard data={data} isFavourite={false} />
-          ))}
+          {isLoading ? (
+            <Text color="white">Loading...</Text>
+          ) : (
+            userFavourites.map((data, index) => (
+              <CommodityCard
+                key={index}
+                data={data}
+                isFavourite={false}
+              />
+            ))
+          )}
         </Flex>
       </Box>
 
@@ -164,9 +195,17 @@ const Home = () => {
           justifyContent="center"
           mt={4}
         >
-          {userFavourites.map((data) => (
-            <CommodityCard data={data} isFavourite={false}/>
-          ))}
+          {isLoading ? (
+            <Text color="white">Loading...</Text>
+          ) : (
+            userFavourites.map((data, index) => (
+              <CommodityCard
+                key={index}
+                data={data}
+                isFavourite={false}
+              />
+            ))
+          )}
         </Flex>
       </Box>
     </Layout>
