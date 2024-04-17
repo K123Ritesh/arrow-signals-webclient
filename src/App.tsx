@@ -4,6 +4,8 @@ import LoginPage from "./pages/login";
 import SignupPage from "./pages/signup";
 import Home from "./pages/home";
 import UserProfile from "./pages/profile";
+import PricingPage from "./pages/subsciption";
+import Simple from "./pages/subsciption";
 
 function App() {
   const router = createBrowserRouter([
@@ -23,6 +25,10 @@ function App() {
     {
       path: "/",
       element: <Home/>,
+    },
+    {
+      path: "/subscribe",
+      element: <Simple/>,
     },
   ]);
 
